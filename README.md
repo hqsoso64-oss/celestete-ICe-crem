@@ -68,11 +68,22 @@ Para implementar tu propia versión de Celeste POS:
 
 ---
 
-## 📸 Capturas de Pantalla
+## 📸 Galería de Capturas
 
-| Dashboard | Punto de Venta |
-|-----------|----------------|
-| ![Dashboard](assets/dashboard_preview.png) | ![POS](assets/pos_preview.png) |
+| **Dashboard Principal** | **Punto de Venta (POS)** |
+|:---:|:---:|
+| ![Dashboard](assets/dashboard.png) | ![POS](assets/pos-punto-de-venta.png) |
+| **Vista general de ventas e inventario bajo** | **Interfaz de facturación rápida** |
+
+| **Inventario** | **Gestión de Gastos** |
+|:---:|:---:|
+| ![Inventario](assets/inventario.png) | ![Gastos](assets/gastos.png) |
+| **Control de existencias y recetas** | **Registro de egresos y categorías** |
+
+| **Reportes** | **Activos Fijos** |
+|:---:|:---:|
+| ![Reportes](assets/reportes.png) | ![Activos](assets/activos-fijos.png) |
+| **Histórico de ventas y filtros** | **Control de equipos y mobiliario** |
 
 ---
 
