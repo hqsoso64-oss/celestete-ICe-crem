@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor Financiero Pro</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            /* Fondo Ultra Oscuro */
+            --card-bg: #0f1115;
+            /* Tarjetas Ligeramente más claras */
+            --accent-blue: #3b82f6;
+            /* Azul Neón */
+            --text-main: #e5e7eb;
+            /* Blanco Hielo */
+            --text-muted: #9ca3af;
+            /* Gris suave */
+            --border-color: #1f2937;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background-color: transparent;
+        }
+
+        /* HEADER */
+        h2 {
+            font-weight: 800;
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* TABS */
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            background-color: var(--card-bg);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 50px;
+            /* Pill shape */
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active,
+        .tab-button:hover {
+            background-color: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* CARDS & STATS */
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--text-muted);
+            font-size: 0.9em;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-blue);
+        }
+
+        .stat-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .stat-card p {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .stat-card.balance p {
+            color: var(--accent-blue);
+        }
+
+        .stat-card.gastos p {
+            color: var(--danger);
+        }
+
+        .stat-card.ingresos p {
+            color: var(--success);
+        }
+
+        /* CIRCLE STATS (BUBBLES) */
+        .bubbles-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            justify-items: center;
+            margin-top: 30px;
+        }
+
+        .bubble {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(145deg, #1a202c, #111827);
+            border: 2px solid;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .bubble.blue {
+            border-color: #3b82f6;
+            color: #60a5fa;
+        }
+
+        .bubble.green {
+            border-color: #10b981;
+            color: #34d399;
+        }
+
+        .bubble.red {
+            border-color: #ef4444;
+            color: #f87171;
+        }
+
+        .bubble.yellow {
+            border-color: #f59e0b;
+            color: #fbbf24;
+        }
+
+        .bubble h4 {
+            margin: 0 0 5px 0;
+            font-size: 12px;
+            opacity: 0.8;
+            font-weight: normal;
+        }
+
+        .bubble p {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* FORMS */
+        form {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        label {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        input,
+        select {
+            width: 100%;
+            background-color: #050505;
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            background: linear-gradient(90deg, #2563eb, #3b82f6);
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+
+        /* LISTS */
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        li span {
+            font-weight: 600;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid var(--border-color);
+            margin: 30px 0;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            text-align: center;
+            display: none;
+            border: 1px solid #10b981;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Gestor Financiero Pro</h2>
+
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="openTab('tab1')">Resumen</button>
+            <button class="tab-button" onclick="openTab('tab2')">Registros</button>
+            <button class="tab-button" onclick="openTab('tab3')">Metas</button>
+            <button class="tab-button" onclick="openTab('tab4')">Deudas</button>
+            <button class="tab-button" onclick="openTab('tab5')">Cuentas</button>
+            <button class="tab-button" onclick="openTab('tab6')">Analytics 📊</button>
+            <button class="tab-button" onclick="openTab('tab7')">Crypto ₿</button>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="tab1" class="tab-content active">
+            <div class="dashboard-header">
+                RESUMEN DE <span id="mesActual" style="color: white; font-weight: bold;">--</span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card ingresos">
+                    <h4>Ingresos</h4>
+                    <p id="totalIngresos">$ -</p>
+                </div>
+                <div class="stat-card gastos">
+                    <h4>Gastos</h4>
+                    <p id="totalGastos">$ -</p>
+                </div>
+                <div class="stat-card balance">
+                    <h4>Balance</h4>
+                    <p id="balance">$ -</p>
+                </div>
+            </div>
+
+            <div id="gastosChart" style="width: 100%; height: 300px;"></div>
+        </div>
+
+        <!-- REGISTROS -->
+        <div id="tab2" class="tab-content">
+            <form id="ingresoForm">
+                <h3 style="margin-top:0; color:white;">Nuevo Ingreso 💰</h3>
+                <label>Monto</label>
+                <input type="number" name="monto" placeholder="Ej: 50.000" required>
+                <label>Fuente</label>
+                <input type="text" name="fuente" placeholder="Ej: Salario, Venta..." required>
+                <label>Nota</label>
+                <input type="text" name="comentarios" placeholder="Opcional">
+                <button type="submit">Registrar Ingreso</button>
+            </form>
+
+            <br>
+
+            <form id="gastoForm">
+                <h3 style="margin-top:0; color:white;">Nuevo Gasto 💸</h3>
+                <label>Monto</label>
+                <input type="number" name="monto" placeholder="Ej: 12.000" required>
+                <label>Categoría</label>
+                <input type="text" name="categoria" placeholder="Ej: Comida, Transporte..." required>
+                <label>Nota</label>
+                <input type="text" name="comentarios" placeholder="Opcional">
+                <button type="submit">Registrar Gasto</button>
+            </form>
+            <div id="msgRegistros" class="message">Guardado correctamente</div>
+        </div>
+
+        <!-- DISTRIBUCIÓN -->
+        <div id="tab3" class="tab-content">
+            <ul id="distribucion-list"></ul>
+        </div>
+
+        <!-- DEUDAS -->
+        <div id="tab4" class="tab-content">
+            <form id="pagoDeudaForm">
+                <label>Seleccionar Deuda</label>
+                <select id="deudaSelect" name="deuda" required>
+                    <option value="">Cargando...</option>
+                </select>
+                <label>Monto a Abonar</label>
+                <input type="number" name="monto" required>
+                <button type="submit">Registrar Abono</button>
+            </form>
+            <br>
+            <ul id="deudas-list"></ul>
+            <div id="msgDeudas" class="message">Pago realizado</div>
+        </div>
+
+        <!-- CUENTAS DIDI -->
+        <div id="tab5" class="tab-content">
+            <form id="cuentasDidiForm">
+                <label>Nequi Tarjeta</label> <input type="number" name="saldoNequiTarjeta" required>
+                <label>Nequi Bolsillo (Ahorro)</label> <input type="number" name="saldoNequiBolsillo" required>
+                <label>Deuda App (Didi)</label> <input type="number" name="deudaDidi" required>
+                <label>Efectivo Físico</label> <input type="number" name="efectivoBilletera" required>
+                <button type="submit">Actualizar Saldos</button>
+            </form>
+
+            <div class="bubbles-grid">
+                <div class="bubble blue">
+                    <h4>Nequi Tarjeta</h4>
+                    <p id="nequiTarjeta">$0</p>
+                </div>
+                <div class="bubble green">
+                    <h4>Nequi Bolsillo</h4>
+                    <p id="nequiBolsillo">$0</p>
+                </div>
+                <div class="bubble red">
+                    <h4>Deuda Didi</h4>
+                    <p id="deudaDidi">$0</p>
+                </div>
+                <div class="bubble yellow">
+                    <h4>Efectivo</h4>
+                    <p id="efectivoBilletera">$0</p>
+                </div>
+            </div>
+            <p style="text-align: center; color:#666; font-size:12px; margin-top:20px;">Última act: <span
+                    id="fechaActualizacion">--</span></p>
+            <div id="msgCuentas" class="message">Saldos Actualizados</div>
+        </div>
+
+        <!-- ANALYTICS (TAB 6) -->
+        <div id="tab6" class="tab-content">
+            <h3 style="color:white; text-align:center;">Analítica Histórica (Sept 25 - Pres)</h3>
+
+            <!-- BEST STATS GRID -->
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px;">
+                <div class="stat-card" style="border-color:#8b5cf6;">
+                    <h4>Mejor Mes</h4>
+                    <p id="bestMonth" style="font-size:14px;">--</p>
+                    <small id="bestMonthAmt" style="color:#a78bfa;">$0</small>
+                </div>
+                <div class="stat-card" style="border-color:#f59e0b;">
+                    <h4>Mejor Día</h4>
+                    <p id="bestDay" style="font-size:14px;">--</p>
+                    <small id="bestDayAmt" style="color:#fbbf24;">$0</small>
+                </div>
+                <div class="stat-card" style="border-color:#ec4899;">
+                    <h4>Top Fuente</h4>
+                    <p id="bestSource" style="font-size:14px;">--</p>
+                    <small id="bestSourceAmt" style="color:#f472b6;">$0</small>
+                </div>
+            </div>
+
+            <!-- CHART: WEEKLY TREND -->
+            <div
+                style="background:var(--card-bg); padding:15px; border-radius:12px; margin-bottom:20px; min-height:500px;">
+                <h4 style="margin:0 0 10px 0; color:var(--text-muted); text-align:center;">Crecimiento Semanal</h4>
+                <div id="weeklyChart" style="width: 100%; height: 450px;"></div>
+            </div>
+
+            <!-- NEW TABLES SECTION (Hardcoded for visibility) -->
+            <div id="extraTables" style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;">
+                <!-- Table 1: Monthly Progression -->
+                <div
+                    style="background:var(--card-bg); padding:15px; border-radius:12px; height:300px; overflow:hidden; display:flex; flex-direction:column;">
+                    <h4 style="margin:0 0 10px 0; color:#10b981;">🏆 Histórico Mensual</h4>
+                    <ul id="monthlyProgressionList" style="overflow-y:auto; flex:1; padding-right:5px; margin:0;">
+                        <li style="color:#666; text-align:center;">Cargando...</li>
+                    </ul>
+                </div>
+
+                <!-- Table 2: Source Breakdown History -->
+                <div
+                    style="background:var(--card-bg); padding:15px; border-radius:12px; height:300px; overflow:hidden; display:flex; flex-direction:column;">
+                    <h4 style="margin:0 0 10px 0; color:#f472b6;">📊 Detalle por Fuente</h4>
+                    <ul id="sourceHistoryList" style="overflow-y:auto; flex:1; padding-right:5px; margin:0;">
+                        <li style="color:#666; text-align:center;">Cargando...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- CURRENT MONTH BREAKDOWN -->
+            <div style="background:var(--card-bg); padding:15px; border-radius:12px;">
+                <h4 style="color:white; margin:0 0 10px 0; border-bottom:1px solid #333; padding-bottom:5px;">
+                    📅 Desglose Mes Actual (<span id="analyticsCurrentMonthName">--</span>)
+                </h4>
+                <ul id="monthBreakdownList">
+                    <li style="color:#666; text-align:center;">Esperando datos...</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CRYPTO TRACKER (TAB 7) -->
+        <div id="tab7" class="tab-content">
+
+            <!-- CRYPTO DASHBOARD -->
+            <div class="bubbles-grid"
+                style="grid-template-columns: repeat(2, 1fr); margin-top:10px; margin-bottom:30px;">
+                <div class="bubble yellow" style="width:100%; border-radius:12px; height:auto; padding:15px;">
+                    <h4>Portafolio (COP)</h4>
+                    <p id="cryptoValue" style="font-size:24px;">$0</p>
+                    <small id="cryptoBtc" style="color:#fbbf24;">0 BTC</small>
+                </div>
+                <div class="bubble blue" style="width:100%; border-radius:12px; height:auto; padding:15px;">
+                    <h4>Inversión Total</h4>
+                    <p id="cryptoInvested">$0</p>
+                    <div id="cryptoProfitPill"
+                        style="background:#10b981; color:black; font-size:10px; padding:2px 8px; border-radius:10px; display:inline-block; margin-top:5px;">
+                        +0%</div>
+                </div>
+            </div>
+
+            <form id="cryptoForm">
+                <h3 style="margin-top:0; color:white;">Nueva Inversión BTC 🚀</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label>COP Invertido</label>
+                        <input type="number" name="cop" placeholder="Ej: 20000" required>
+                    </div>
+                    <div>
+                        <label>Tasa TRM (USD)</label>
+                        <input type="number" name="tasaUsd" step="0.01" placeholder="Ej: 4100" required>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label>Precio BTC (USD)</label>
+                        <input type="number" name="btcPrice" step="0.01" placeholder="Precio Compra" required>
+                    </div>
+                    <div>
+                        <label>BTC Recibidos</label>
+                        <input type="number" name="btcAmount" step="0.00000001" placeholder="0.000..." required>
+                    </div>
+                </div>
+                <label>Notas</label>
+                <input type="text" name="notas" placeholder="Ej: Binance P2P">
+
+                <button type="submit"
+                    style="background: linear-gradient(90deg, #f59e0b, #fbbf24); color:black;">Registrar Compra</button>
+            </form>
+
+            <div id="msgCrypto" class="message">Inversión registrada</div>
+
+            <h4 style="color:var(--text-muted); margin-top:30px;">Historial de Compras</h4>
+            <ul id="cryptoList" style="font-size:12px;"></ul>
+        </div>
+
+    </div>
+
+    <script>
+        google.charts.load('current', { 'packages': ['corechart'] });
+        const formatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
+
+        function openTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+
+            // Encontrar botón y activarlo visualmente
+            // Lógica simplificada de botones
+            const index = ['tab1', 'tab2', 'tab3', 'tab4', 'tab5'].indexOf(tabName);
+            if (index >= 0 && document.querySelectorAll('.tab-button')[index]) {
+                document.querySelectorAll('.tab-button')[index].classList.add('active');
+            }
+
+            // Cargar datos
+            loadData(tabName);
+        }
+
+        function loadData(tab) {
+            if (tab === 'tab1') {
+                document.getElementById('mesActual').textContent = new Date().toLocaleString('es-CO', { month: 'long', year: 'numeric' }).toUpperCase();
+                run('getTotals', renderDashboard);
+                run('getGastosByCategory', renderChart);
+            } else if (tab === 'tab3') {
+                run('getDistribucionData', renderMetas);
+            } else if (tab === 'tab4') {
+                run('getDeudasData', renderDeudas);
+            } else if (tab === 'tab5') {
+                run('getUltimasCuentasDidi', renderCuentas);
+            } else if (tab === 'tab6') {
+                run('getDashboardAnalytics', renderAnalytics);
+            } else if (tab === 'tab7') {
+                run('getCryptoData', renderCrypto);
+            }
+        }
+
+        // --- COMUNICACIÓN CON GOOGLE APPS SCRIPT ---
+        function run(func, callback, params = undefined) {
+            const runner = google.script.run.withSuccessHandler(callback).withFailureHandler(err => {
+                console.error("Error:", err);
+            });
+            if (params) runner[func](params);
+            else runner[func]();
+        }
+
+        // --- RENDERIZADORES ---
+        function renderDashboard(data) {
+            document.getElementById('totalIngresos').innerText = formatter.format(data.totalIngresos || 0);
+            document.getElementById('totalGastos').innerText = formatter.format(data.totalGastos || 0);
+            const bal = (data.totalIngresos || 0) - (data.totalGastos || 0);
+            document.getElementById('balance').innerText = formatter.format(bal);
+        }
+
+        function renderChart(data) {
+            if (!data || data.length < 2) {
+                document.getElementById('gastosChart').innerHTML = '<p style="text-align:center; color:#666; margin-top:50px;">Sin gastos este mes para mostrar gráfica</p>';
+                return;
+            }
+            const chartData = google.visualization.arrayToDataTable(data);
+            const options = {
+                backgroundColor: 'transparent',
+                pieHole: 0.4,
+                legend: { position: 'bottom', textStyle: { color: '#a0aec0', fontSize: 11 } },
+                pieSliceBorderColor: '#050505',
+                colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                chartArea: { width: '90%', height: '80%' }
+            };
+            const chart = new google.visualization.PieChart(document.getElementById('gastosChart'));
+            chart.draw(chartData, options);
+        }
+
+        function renderMetas(data) {
+            const list = document.getElementById('distribucion-list');
+            list.innerHTML = '';
+            if (!data || data.length <= 1) { list.innerHTML = '<li style="justify-content:center;">Sin metas definidas</li>'; return; }
+
+            data.slice(1).forEach(r => {
+                const [meta, req, , , acum] = r; // Asumiendo orden columnas
+                const li = document.createElement('li');
+                const percent = req > 0 ? (acum / req) * 100 : 0;
+                li.innerHTML = `
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span style="color:#e5e7eb;">${meta}</span>
+                        <span style="color:#3b82f6;">${formatter.format(acum)}</span>
+                    </div>
+                    <div style="background:#1f2937; height:6px; border-radius:3px; overflow:hidden;">
+                        <div style="background:#3b82f6; width:${Math.min(percent, 100)}%; height:100%;"></div>
+                    </div>
+                </div>
+            `;
+                list.appendChild(li);
+            });
+        }
+
+        function renderDeudas(data) {
+            const list = document.getElementById('deudas-list');
+            const select = document.getElementById('deudaSelect');
+            list.innerHTML = '';
+            select.innerHTML = '<option value="">Selecciona deuda...</option>';
+
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                list.innerHTML = '<li style="justify-content:center; color:#666;">¡Libre de deudas! 🎉</li>';
+                return;
+            }
+
+            data.forEach(r => {
+                const [nombre, inicial, pagado, pendiente] = r;
+                // Validar que pendiente sea número
+                const valPendiente = typeof pendiente === 'number' ? pendiente : 0;
+
+                const li = document.createElement('li');
+                li.innerHTML = `
+                <div style="display:flex; flex-direction:column;">
+                    <span style="color:white; font-size:14px;">${nombre}</span>
+                    <small style="color:#d93025;">Pendiente: ${formatter.format(valPendiente)}</small>
+                </div>
+                <div style="color:#10b981; font-size:12px;"> Pagado: ${formatter.format(pagado)}</div>
+            `;
+                list.appendChild(li);
+
+                const opt = document.createElement('option');
+                opt.value = nombre;
+                opt.innerText = nombre;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderCuentas(data) {
+            const d = data || {};
+            document.getElementById('nequiTarjeta').innerText = formatter.format(d.Saldo_Nequi_Tarjeta || 0);
+            document.getElementById('nequiBolsillo').innerText = formatter.format(d.Saldo_Nequi_Bolsillo || 0);
+            document.getElementById('deudaDidi').innerText = formatter.format(d.Deuda_Didi || 0);
+            document.getElementById('efectivoBilletera').innerText = formatter.format(d.Efectivo_Billetera || 0);
+            document.getElementById('fechaActualizacion').innerText = d.Fecha || 'N/A';
+        }
+
+        // --- FORM SUBMITS ---
+        document.getElementById('ingresoForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target));
+            run('registrarIngreso', (res) => {
+                document.getElementById('msgRegistros').style.display = 'block';
+                setTimeout(() => document.getElementById('msgRegistros').style.display = 'none', 3000);
+
+                // Mostrar consejo de distribución
+                if (res && res.length) {
+                    let txt = "💰 CONSEJO DE DISTRIBUCIÓN:\n\n";
+                    res.forEach(i => txt += `- ${i.meta}: ${formatter.format(i.monto)}\n`);
+                    alert(txt);
+                }
+                e.target.reset();
+            }, data);
+        });
+
+        document.getElementById('gastoForm').addEventListener('submit', e => {
+            e.preventDefault();
+            run('registrarGasto', () => {
+                document.getElementById('msgRegistros').innerText = "Gasto Registrado";
+                document.getElementById('msgRegistros').style.display = 'block';
+                e.target.reset();
+                setTimeout(() => document.getElementById('msgRegistros').style.display = 'none', 3000);
+            }, Object.fromEntries(new FormData(e.target)));
+        });
+
+        document.getElementById('pagoDeudaForm').addEventListener('submit', e => {
+            e.preventDefault();
+            run('registrarPagoDeuda', (nuevasDeudas) => {
+                renderDeudas(nuevasDeudas);
+                document.getElementById('msgDeudas').style.display = 'block';
+                e.target.reset();
+                setTimeout(() => document.getElementById('msgDeudas').style.display = 'none', 3000);
+            }, Object.fromEntries(new FormData(e.target)));
+        });
+
+        document.getElementById('cuentasDidiForm').addEventListener('submit', e => {
+            e.preventDefault();
+            run('procesarCuentasDidi', (datos) => {
+                renderCuentas(datos);
+                document.getElementById('msgCuentas').style.display = 'block';
+                e.target.reset();
+                setTimeout(() => document.getElementById('msgCuentas').style.display = 'none', 3000);
+            }, Object.fromEntries(new FormData(e.target)));
+        });
+
+        document.getElementById('cryptoForm').addEventListener('submit', e => {
+            e.preventDefault();
+            run('registrarInversionBTC', (data) => {
+                renderCrypto(data);
+                document.getElementById('msgCrypto').style.display = 'block';
+                e.target.reset();
+                setTimeout(() => document.getElementById('msgCrypto').style.display = 'none', 3000);
+            }, Object.fromEntries(new FormData(e.target)));
+        });
+
+        // --- NEW RENDERERS ---
+
+        function renderAnalytics(data) {
+            const { history, bests, currentMonth } = data;
+
+            // Best Stats
+            document.getElementById('bestMonth').innerText = bests.month.name || '--';
+            document.getElementById('bestMonthAmt').innerText = formatter.format(bests.month.amount);
+
+            document.getElementById('bestDay').innerText = bests.day.date || '--';
+            document.getElementById('bestDayAmt').innerText = formatter.format(bests.day.amount);
+
+            document.getElementById('bestSource').innerText = bests.source.name || '--';
+            document.getElementById('bestSourceAmt').innerText = formatter.format(bests.source.amount);
+
+            // Weekly Chart (Column Chart)
+            if (history.weeks.length > 0) {
+                const chartData = [['Semana', 'Ingresos', { role: 'tooltip' }]];
+                history.weeks.forEach(w => {
+                    // w.week = "2025-1"
+                    // xLabel = "1"
+                    const xLabel = w.week.split('-')[1]; // Robust split
+
+                    const tooltipText = (w.label && w.label !== 'undefined') ? w.label : `Semana ${w.week}`;
+                    chartData.push([xLabel, w.amount, `${tooltipText}\nIngresos: ${formatter.format(w.amount)}`]);
+                });
+
+                const gData = google.visualization.arrayToDataTable(chartData);
+                const options = {
+                    backgroundColor: 'transparent',
+                    legend: { position: 'none' },
+                    hAxis: {
+                        textStyle: { color: '#6b7280', fontSize: 12 },
+                        title: 'Semanas',
+                        slantedText: true
+                    },
+                    vAxis: { textStyle: { color: '#6b7280' }, gridlines: { color: 'transparent' } },
+                    colors: ['#3b82f6'],
+                    chartArea: { width: '85%', height: '75%' },
+                    bar: { groupWidth: "50%" },
+                    tooltip: { textStyle: { fontSize: 14 }, showColorCode: true },
+                    height: 450
+                };
+                const chart = new google.visualization.ColumnChart(document.getElementById('weeklyChart'));
+                chart.draw(gData, options);
+            }
+
+            // POPULATE TABLES (Now Hardcoded in HTML)
+
+            // 1. Monthly Progression
+            const monthlyList = document.getElementById('monthlyProgressionList');
+            if (monthlyList && history.months) {
+                monthlyList.innerHTML = '';
+                const monthEntries = Object.entries(history.months);
+                if (monthEntries.length === 0) {
+                    monthlyList.innerHTML = '<li style="color:#666; text-align:center; padding:20px;">Sin datos históricos</li>';
+                } else {
+                    monthEntries.forEach(([month, amt]) => {
+                        monthlyList.innerHTML += `<li style="padding:10px; font-size:13px; border-bottom:1px solid #1f2937; display:flex; justify-content:space-between;">
+                            <span style="color:#e5e7eb;">${month}</span> 
+                            <span style="color:#10b981; font-weight:bold;">${formatter.format(amt)}</span>
+                        </li>`;
+                    });
+                }
+            }
+
+            // 2. Source Breakdown
+            const sourceList = document.getElementById('sourceHistoryList');
+            if (sourceList && history.sources) {
+                sourceList.innerHTML = '';
+                const sourceEntries = Object.entries(history.sources);
+                if (sourceEntries.length === 0) {
+                    sourceList.innerHTML = '<li style="color:#666; text-align:center; padding:20px;">Sin datos de fuentes</li>';
+                } else {
+                    sourceEntries.forEach(([month, sourcesMap]) => {
+                        let monthBlock = `<li style="padding:0; display:block; border-bottom:1px solid #374151; background:transparent; margin-bottom:10px;">
+                            <div style="background:#1f2937; padding:8px; border-radius:6px; color:#e5e7eb; font-weight:bold; margin-bottom:5px;">${month}</div>
+                            <div style="padding:0 5px;">`;
+
+                        // Sort sources by amount desc
+                        const sortedSrcs = Object.entries(sourcesMap).sort((a, b) => b[1] - a[1]);
+
+                        sortedSrcs.forEach(([src, amt]) => {
+                            monthBlock += `<div style="display:flex; justify-content:space-between; width:100%; margin-bottom:4px; font-size:13px;">
+                                <span style="color:#9ca3af;">${src}</span>
+                                <span style="color:#f472b6;">${formatter.format(amt)}</span>
+                             </div>`;
+                        });
+                        monthBlock += `</div></li>`;
+                        sourceList.innerHTML += monthBlock;
+                    });
+                }
+            }
+
+            // Current Month Breakdown
+            const curList = document.getElementById('monthBreakdownList');
+            document.getElementById('analyticsCurrentMonthName').innerText = currentMonth.name;
+            curList.innerHTML = '';
+
+            if (currentMonth.breakdown.length === 0) {
+                curList.innerHTML = '<li style="justify-content:center; color:#666;">Sin ingresos registrados este mes</li>';
+            } else {
+                currentMonth.breakdown.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${item.source}</span> <span style="color:#10b981;">${formatter.format(item.amount)}</span>`;
+                    curList.appendChild(li);
+                });
+            }
+        }
+
+        function renderCrypto(data) {
+            const sum = data.summary;
+            const usdFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
+
+            // Dashboard - Display in USD
+            document.getElementById('cryptoValue').innerText = usdFormatter.format(sum.currentValueUsd || 0);
+            document.getElementById('cryptoValue').style.color = sum.currentValueUsd > 0 ? '#fbbf24' : '#6b7280';
+
+            document.getElementById('cryptoBtc').innerText = (sum.totalBtc || 0).toFixed(8) + ' BTC';
+            document.getElementById('cryptoInvested').innerText = formatter.format(sum.totalCop);
+
+            // Remove profit pill since we're showing USD value
+            const pill = document.getElementById('cryptoProfitPill');
+            if (pill) pill.style.display = 'none';
+
+            // List
+            const list = document.getElementById('cryptoList');
+            list.innerHTML = '';
+            data.history.forEach(h => {
+                const li = document.createElement('li');
+                li.style.flexDirection = 'column';
+                li.style.alignItems = 'flex-start';
+                li.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; width:100%; margin-bottom:5px;">
+                        <span style="color:white;">${h.date}</span>
+                        <span style="color:#fbbf24;">${h.btc.toFixed(8)} BTC</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; width:100%; color:#6b7280;">
+                        <span>Inv: ${formatter.format(h.cop)}</span>
+                        <span>@ ${formatter.format(h.btcPriceAtBuy)} /BTC</span>
+                    </div>
+                 `;
+                list.appendChild(li);
+            });
+        }
+
+        // INICIO
+        document.addEventListener('DOMContentLoaded', () => openTab('tab1'));
+
+    </script>
+</body>
+
+</html>
