@@ -1,5 +1,4 @@
-var SPREADSHEET_ID = "TU_ID_DE_GOOGLE_SHEETS_AQUI"; // IMPORTANTE: Reemplaza esto con el ID real de tu hoja de cálculo de Google.
-// El ID se encuentra en la URL de tu hoja: https://docs.google.com/spreadsheets/d/[ESTE_ES_EL_ID]/edit
+var SPREADSHEET_ID = "TU_ID_DE_HOJA_DE_CALCULO_AQUI"; // ID CORRECTA
 var CACHE_TIME = 1500;
 
 function doGet() { return HtmlService.createHtmlOutputFromFile('Index').setTitle('Celeste POS').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL); }
@@ -72,6 +71,7 @@ function getDashboardData() {
       monthSalesCount: salesMonthCount,
       monthRevenue: formatMoney(revMonth),
       monthExpenses: formatMoney(expMonth),
+      monthBalance: formatMoney(revMonth - expMonth),
       todayMesaCount: mesa,
       todayLlevarCount: llevar,
       paymentMethodsToday: {
@@ -100,13 +100,63 @@ function getFlavors() {
   var d = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Sabores de Helados").getDataRange().getValues();
   return d.slice(1).map(r => ({name:r[1]}));
 }
+function getRecentOrders() {
+  var d = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Ventas").getDataRange().getValues();
+  var recentOrders = {};
+  var recentOrderIds = [];
+  
+  for(var i = d.length - 1; i >= 1; i--) {
+     var id = d[i][0];
+     if(!id || id.toString().trim() === "") {
+        if(!d[i][2] && !d[i][5]) continue; // Skip truly blank rows
+        id = "FILA-" + i;
+     }
+     if(recentOrders[id] === undefined) {
+        if(recentOrderIds.length >= 20) continue;
+        recentOrderIds.push(id);
+        recentOrders[id] = { id: id, date: formatDate(d[i][1]), items: [], total: 0, customer: d[i][11] || '', type: d[i][6], payMethod: d[i][7] };
+     }
+     
+     if(recentOrders[id]) {
+        recentOrders[id].items.unshift({
+           name: d[i][2], qty: d[i][3], price: d[i][4], total: d[i][5], flavors: d[i][8], rowIndex: i + 1
+        });
+        recentOrders[id].total += parseFloat(d[i][5]) || 0;
+        
+        if (!recentOrders[id].customer && d[i][11]) {
+           recentOrders[id].customer = d[i][11];
+        }
+     }
+  }
+  return recentOrderIds.map(id => recentOrders[id]);
+}
+
 function registerSale(s) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var shV = ss.getSheetByName("Ventas");
   var shI = ss.getSheetByName("Inventario");
-  var id = "VENTA-"+Date.now();
+  var id = s.orderId || ("VENTA-"+Date.now());
+  var prodData = ss.getSheetByName("Productos").getDataRange().getValues();
+  
   s.items.forEach(it => {
-    shV.appendRow([id, new Date(), it.name, it.qty, it.price, it.total, s.type, s.payMethod, it.flavors.join(','), 0, s.user]);
+    var newRow = [id, new Date(), it.name, it.qty, it.price, it.total, s.type, s.payMethod, it.flavors.join(','), 0, s.user, s.customer || ''];
+    
+    if(it.editRowIndex) {
+      var oldName = shV.getRange(it.editRowIndex, 3).getValue();
+      var oldQty = shV.getRange(it.editRowIndex, 4).getValue();
+      var oldProd = prodData.find(p => p[1] === oldName && p[11] !== "ELIMINADO");
+      
+      if(oldProd && oldProd[7]) {
+        oldProd[7].split(',').forEach(p => {
+          var [code, q] = p.split(':');
+          updateStock(shI, code, -(parseFloat(q)*oldQty));
+        });
+      }
+      shV.getRange(it.editRowIndex, 1, 1, 12).setValues([newRow]);
+    } else {
+      shV.appendRow(newRow);
+    }
+    
     if(it.product.INGREDIENTES_NECESARIOS) {
       it.product.INGREDIENTES_NECESARIOS.split(',').forEach(p => {
         var [code, q] = p.split(':');
@@ -114,7 +164,7 @@ function registerSale(s) {
       });
     }
   });
-  logAction("VENTA", "Total: "+s.items.reduce((a,b)=>a+b.total,0), s.user);
+  logAction(s.items.some(x=>x.editRowIndex) ? "EDIT_VENTA" : "VENTA", "Total: "+s.items.reduce((a,b)=>a+b.total,0), s.user);
 }
 function updateStock(sh, id, qty) {
   var d = sh.getDataRange().getValues();

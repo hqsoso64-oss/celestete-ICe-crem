@@ -9,6 +9,17 @@ Desarrollado con una arquitectura **Serverless** utilizando el ecosistema de Goo
 
 ---
 
+## 💡 Beneficios del Sistema
+
+Implementar Celeste POS transforma por completo la administración de tu negocio:
+* ⏱️ **Ahorro de Tiempo:** Automatiza tareas repetitivas y reportes manuales, ahorrando decenas de horas semanales en conciliaciones.
+* 📈 **Control Total del Negocio:** Monitorea ingresos, gastos, e inventario en tiempo real, desde cualquier lugar y en cualquier dispositivo.
+* 🚫 **Prevención de Pérdidas:** El control estricto de recetas e ingredientes evita fugas de inventario y descuadres de caja.
+* 🤝 **Mejor Experiencia del Cliente:** Facturación ultra rápida y sin errores que agiliza las filas y mejora la atención.
+* 📉 **Cero Costos de Servidor:** Al utilizar Google Workspace, no hay cobros mensuales por hosting o bases de datos externas.
+
+---
+
 ## 🚀 Características Principales
 
 ### 📊 Dashboard en Tiempo Real
@@ -16,10 +27,15 @@ Desarrollado con una arquitectura **Serverless** utilizando el ecosistema de Goo
 * Gráficos dinámicos (Chart.js) para análisis de métodos de pago y tipos de venta (Mesa/Llevar).
 * Alertas automáticas de stock bajo.
 
-### 🛒 Punto de Venta (POS) Ágil
+### 🛒 Punto de Venta (POS) Ágil e Inteligente
 * Interfaz optimizada para pantallas táctiles y escritorio.
 * Buscador inteligente de productos.
 * Gestión de productos compuestos (ej: Helado de 2 sabores) con descuento de inventario automático.
+* **Sistema Avanzado de Pedidos:** 
+  * Edición de pedidos recientes directamente desde la interfaz.
+  * Modificación de sabores en tiempo real con recálculo automático y restauración de inventario (evitando duplicidades).
+  * Detección inteligente de método de pago de pedidos previos.
+* Prevención de doble facturación (Double Submission Protection).
 * Soporte para múltiples métodos de pago (Efectivo, Transferencias, Tarjetas).
 
 ### 📦 Gestión de Inventario Avanzada

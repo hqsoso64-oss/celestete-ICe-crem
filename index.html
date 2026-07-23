@@ -122,6 +122,10 @@
         <div class="dashboard-card">
           <h3>Gastos Recientes</h3>
           <p>Gastos este mes: <span id="month-expenses">0</span></p>
+          <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+            <h4 style="margin: 0; color: #3f51b5;">Balance del Mes</h4>
+            <p style="font-size: 20px; font-weight: bold;">Margen: <span id="month-balance" style="color: #3f51b5;">$0</span></p>
+          </div>
         </div>
       </div>
       
@@ -149,6 +153,10 @@
             </select>
           </div>
           <div class="form-group">
+            <label>Cliente / Mesa (Opcional)</label>
+            <input type="text" id="customer-name" placeholder="Ej: Juan o Mesa 3">
+          </div>
+          <div class="form-group">
             <label>Producto</label>
             <select id="product-select" style="width:100%"><option></option></select>
           </div>
@@ -164,7 +172,7 @@
         </div>
         
         <div style="background:#fff; padding:15px; border-radius:5px; border:1px solid #ddd;"> 
-          <h3>Carrito</h3>
+          <h3 id="cart-title">Carrito</h3>
           <div id="cart-list" style="min-height:200px; max-height:400px; overflow-y:auto; border-bottom:1px solid #eee; margin-bottom:10px;">
             <p style="text-align:center; padding:20px; color:#999">Carrito Vacío</p>
           </div>
@@ -182,6 +190,11 @@
           </div>
           <button class="btn-success" onclick="processSale()" style="width:100%; font-size:1.2em">REGISTRAR VENTA</button>
         </div>
+      </div>
+
+      <div style="margin-top: 20px;">
+        <h3>Últimos Pedidos (20)</h3>
+        <div id="recent-orders-list"></div>
       </div>
     </div>
     
@@ -268,6 +281,9 @@
     let ACTIVE_USER = "Desconocido";
     let products = [], flavors = [], cart = [];
     let chart1 = null, chart2 = null;
+    let currentOrderId = null;
+    let recentOrdersData = [];
+    let editingRegisteredRowIndex = null;
 
     $(document).ready(function() {
       let storedUser = localStorage.getItem('celeste_pos_user');
@@ -321,7 +337,7 @@
       $(`.tab[data-tab="${tab}"]`).addClass('active');
       $('.tab-content').hide();
       $(`#${tab}-content`).fadeIn();
-      if(tab === 'pos') { loadProducts(); loadFlavors(); }
+      if(tab === 'pos') { loadProducts(); loadFlavors(); loadRecentOrders(); }
       if(tab === 'inventory') loadInventory();
       if(tab === 'expenses') loadExpenses();
       if(tab === 'assets') loadAssets();
@@ -339,11 +355,12 @@
       $('#month-sales-count').text(data.monthSalesCount);
       $('#month-revenue').text(data.monthRevenue);
       $('#month-expenses').text(data.monthExpenses);
+      $('#month-balance').text(data.monthBalance);
       
       if(chart1) chart1.destroy();
       chart1 = new Chart(document.getElementById('sale-type-chart'), { type: 'pie', data: { labels: ['Mesa', 'Llevar'], datasets: [{ data: [data.todayMesaCount, data.todayLlevarCount], backgroundColor: ['#3f51b5', '#f44336'] }] }, options: { responsive: true, maintainAspectRatio: false } });
       if(chart2) chart2.destroy();
-      const pData = [parseInt(data.paymentMethodsToday.EFECTIVO.replace(/\D/g,''))||0, parseInt(data.paymentMethodsToday.NEQUI.replace(/\D/g,''))||0, parseInt(data.paymentMethodsToday.BANCOLOMBIA.replace(/\D/g,''))||0, parseInt(data.paymentMethodsToday.TARJETA.replace(/\D/g,''))||0];
+      const pData = [parseInt(String(data.paymentMethodsToday.EFECTIVO).replace(/\D/g,''))||0, parseInt(String(data.paymentMethodsToday.NEQUI).replace(/\D/g,''))||0, parseInt(String(data.paymentMethodsToday.BANCOLOMBIA).replace(/\D/g,''))||0, parseInt(String(data.paymentMethodsToday.TARJETA).replace(/\D/g,''))||0];
       chart2 = new Chart(document.getElementById('payment-method-chart'), { type: 'pie', data: { labels: ['Efectivo', 'Nequi', 'Bancolombia', 'Tarjeta'], datasets: [{ data: pData, backgroundColor: ['#4caf50', '#2196f3', '#ffeb3b', '#ff9800'] }] }, options: { responsive: true, maintainAspectRatio: false } });
     }
 
@@ -356,6 +373,7 @@
       }).getProducts();
     }
     function loadFlavors() { google.script.run.withSuccessHandler(res => flavors = res).getFlavors(); }
+    
     function onProductSelect() {
       const id = $('#product-select').val();
       const p = products.find(x => x.id === id);
@@ -371,6 +389,7 @@
         }
       } else { $('#flavor-section').hide(); }
     }
+    
     function addToCart() {
       const id = $('#product-select').val();
       if(!id) return showNotif("Selecciona producto", true);
@@ -383,28 +402,142 @@
         $('.flav-sel').each((i, el) => { if($(el).val()) flavs.push($(el).val()); });
         if(flavs.length < p.CANTIDAD_BOLAS) return showNotif("Faltan sabores", true);
       }
-      cart.push({ product: p, name: p.name, qty: qty, price: price, total: price*qty, flavors: flavs });
+      cart.push({ id_cart: Date.now(), product: p, name: p.name, qty: qty, price: price, total: price*qty, flavors: flavs, editRowIndex: editingRegisteredRowIndex });
+      editingRegisteredRowIndex = null;
       renderCart();
       $('#product-select').val(null).trigger('change'); $('#qty').val(1); $('#flavor-section').hide();
     }
+    
     function renderCart() {
       const $list = $('#cart-list'); $list.empty(); let total = 0;
       cart.forEach((item, idx) => {
         total += item.total;
-        $list.append(`<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><div><b>${item.name}</b> x${item.qty}<br><small>${item.flavors.join(', ')}</small></div><div style="text-align:right">$${formatMoney(item.total)}<br><i class="material-icons" style="color:red; cursor:pointer;" onclick="remItem(${idx})">delete</i></div></div>`);
+        $list.append(`<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><div><b>${item.name}</b> x${item.qty}<br><small>${item.flavors.join(', ')}</small></div><div style="text-align:right">$${formatMoney(item.total)}<br><i class="material-icons" style="color:#3f51b5; cursor:pointer; margin-right:5px;" title="Editar" onclick="editItem(${idx})">edit</i><i class="material-icons" style="color:red; cursor:pointer;" title="Eliminar" onclick="remItem(${idx})">delete</i></div></div>`);
       });
       $('#cart-total').text(formatMoney(total));
     }
+    
     function remItem(i) { cart.splice(i,1); renderCart(); }
+    
+    function editItem(i) {
+      const item = cart[i];
+      $('#product-select').val(item.product.id).trigger('change');
+      onProductSelect();
+      $('#qty').val(item.qty);
+      setTimeout(() => {
+        if(item.product.CANTIDAD_BOLAS > 0 && item.flavors && item.flavors.length > 0) {
+          $('.flav-sel').each((idx, el) => {
+             $(el).val(item.flavors[idx] || '');
+          });
+        }
+      }, 100);
+      editingRegisteredRowIndex = item.editRowIndex || null;
+      remItem(i);
+    }
+    
     function updateCartPrices() {
        const type = $('#sale-type').val();
        cart.forEach(item => { item.price = type === 'MESA' ? item.product.PRECIO_MESA : item.product.PRECIO_LLEVAR; item.total = item.price * item.qty; });
        renderCart();
     }
+    
     function processSale() {
       if(cart.length === 0) return showNotif("Carrito vacío", true);
-      const sale = { items: cart, type: $('#sale-type').val(), payMethod: $('#payment-method').val(), user: ACTIVE_USER };
-      google.script.run.withSuccessHandler(() => { cart = []; renderCart(); showNotif("Venta registrada!"); }).withFailureHandler(e => showNotif(e.message, true)).registerSale(sale);
+      const sale = { 
+         items: cart, type: $('#sale-type').val(), payMethod: $('#payment-method').val(), 
+         user: ACTIVE_USER, customer: $('#customer-name').val(), orderId: currentOrderId 
+      };
+      
+      const btn = $('.btn-success');
+      btn.prop('disabled', true).text('PROCESANDO...');
+      
+      google.script.run.withSuccessHandler(() => { 
+         cart = []; 
+         currentOrderId = null;
+         editingRegisteredRowIndex = null;
+         $('#customer-name').val('');
+         $('#cart-title').text('Carrito');
+         renderCart(); 
+         loadRecentOrders();
+         showNotif("Venta registrada!"); 
+         btn.prop('disabled', false).text('REGISTRAR VENTA');
+      }).withFailureHandler(e => {
+         showNotif(e.message, true);
+         btn.prop('disabled', false).text('REGISTRAR VENTA');
+      }).registerSale(sale);
+    }
+    
+    function loadRecentOrders() {
+      $('#recent-orders-list').html('<p>Cargando pedidos recientes...</p>');
+      google.script.run
+        .withSuccessHandler(renderRecentOrders)
+        .withFailureHandler(e => { $('#recent-orders-list').html('<p style="color:red">Error: '+e.message+'</p>'); })
+        .getRecentOrders();
+    }
+
+    function renderRecentOrders(orders) {
+      recentOrdersData = orders;
+      if(!orders || orders.length === 0) {
+        $('#recent-orders-list').html('<p>No hay pedidos recientes.</p>'); return;
+      }
+      let html = '<div style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">';
+      orders.forEach(o => {
+        let itemsHtml = o.items.map((i, idx) => `
+          <li style="margin-bottom:3px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #eee; padding-bottom:3px;">
+            <span>${i.qty}x ${i.name} ${i.flavors ? '<br><small style="color:#666">('+i.flavors+')</small>' : ''}</span>
+            <i class="material-icons" style="color:#3f51b5; cursor:pointer; font-size:18px; padding-left:5px;" title="Editar item" onclick="editRegisteredItem('${o.id}', ${idx})">edit</i>
+          </li>`).join('');
+        html += `
+          <div style="background: white; border: 1px solid #ddd; padding: 15px; border-radius: 5px; min-width: 250px; flex-shrink: 0;">
+            <h4 style="margin:0 0 5px 0; color: #3f51b5;">${o.customer || 'Sin Nombre / Mesa'}</h4>
+            <p style="margin: 0 0 10px 0; font-size: 0.8em; color: #777;">ID: ${o.id}</p>
+            <ul style="margin: 0 0 10px 0; padding-left: 0; font-size: 0.9em; max-height: 120px; overflow-y: auto; list-style:none;">
+              ${itemsHtml}
+            </ul>
+            <p style="margin: 0 0 10px 0; font-weight: bold;">Total: $${formatMoney(o.total)}</p>
+            <button style="width:100%; padding: 8px; font-size:0.9em;" onclick="addToExistingOrder('${o.id}', '${o.customer || ''}', '${o.type}', '${o.payMethod}')">Agregar a este pedido</button>
+          </div>
+        `;
+      });
+      html += '</div>';
+      $('#recent-orders-list').html(html);
+    }
+
+    function editRegisteredItem(orderId, itemIdx) {
+       const order = recentOrdersData.find(o => o.id === orderId);
+       if(!order) return;
+       const item = order.items[itemIdx];
+       
+       addToExistingOrder(order.id, order.customer, order.type, order.payMethod);
+       
+       const p = products.find(x => x.name === item.name);
+       if(!p) return showNotif("Producto no encontrado en BD", true);
+       
+       $('#product-select').val(p.id).trigger('change');
+       onProductSelect();
+       $('#qty').val(item.qty);
+       
+       setTimeout(() => {
+         if(p.CANTIDAD_BOLAS > 0 && item.flavors) {
+           const flavArr = item.flavors.split(',');
+           $('.flav-sel').each((idx, el) => {
+              $(el).val(flavArr[idx] ? flavArr[idx].trim() : '');
+           });
+         }
+       }, 100);
+       
+       editingRegisteredRowIndex = item.rowIndex;
+       showNotif("Editando producto del pedido...");
+    }
+
+    function addToExistingOrder(orderId, customer, type, payMethod) {
+      currentOrderId = orderId;
+      $('#customer-name').val(customer);
+      if (type) $('#sale-type').val(type).trigger('change');
+      if (payMethod) $('#payment-method').val(payMethod).trigger('change');
+      $('#cart-title').text('Carrito (Modificando: ' + (customer || orderId) + ')');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if(!editingRegisteredRowIndex) showNotif("Agregando a pedido existente");
     }
 
     function runReport() {
