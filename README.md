@@ -3,7 +3,7 @@
 ![Estado del Proyecto](https://img.shields.io/badge/Estado-Producción-success)
 ![Tecnología](https://img.shields.io/badge/Google-Apps%20Script-4285F4?logo=google&logoColor=white)
 
-**Celeste POS** es una solución integral de Punto de Venta (POS) y Gestión de Inventario basada en la nube, diseñada específicamente para optimizar la operación de pequeños y medianos comercios (Heladerías, Cafeterías, Retail).
+**Celeste POS** es una solución integral de Punto de Venta (POS) y Gestión de Inventario basada en la nube, diseñada específicamente para optimizar la operación de pequeños y medianos comercios como heladerías, cafeterías y negocios de retail.
 
 Desarrollado con una arquitectura **Serverless** utilizando el ecosistema de Google, elimina costos de infraestructura y garantiza alta disponibilidad.
 
@@ -60,27 +60,34 @@ Implementar Celeste POS transforma por completo la administración de tu negocio
 
 ---
 
-## 📋 Requisitos de Instalación
+## 📋 Instalación Rápida
 
-Para implementar tu propia versión de Celeste POS:
+Para una configuración completa y detallada, **[lee el archivo SETUP.md](./SETUP.md)**.
 
-1.  **Base de Datos:**
-    * Crea una Hoja de Cálculo de Google nueva.
-    * Crea las pestañas: `Inventario`, `Productos`, `Ventas`, `Gastos`, `Activos`, `Logs`.
-    * *Nota: Asegúrate de configurar los encabezados correctamente.*
+### Resumen (30 segundos):
+1. Crea un Google Sheet
+2. Crea 6 hojas con los nombres exactos (Inventario, Productos, Ventas, Gastos, Sabores de Helados, Activos)
+3. Agrega los encabezados en cada hoja (mira SETUP.md)
+4. Copia el ID de tu Sheet
+5. Abre Google Apps Script desde tu Sheet
+6. Copia **Código.gs** y reemplaza el `SPREADSHEET_ID = ""` con tu ID
+7. Copia **index.html** como archivo HTML en Apps Script
+8. Haz clic en Implementar → Nueva Implementación → Aplicación Web
+9. ¡Listo! 🎉
 
-2.  **Código:**
-    * Abre la hoja de cálculo, ve a `Extensiones > Apps Script`.
-    * Crea un archivo `Index.html` y pega el contenido del archivo `index.html` de este repositorio.
-    * Pega el código del servidor en el archivo por defecto `Código.gs` copiando el contenido de `Código.gs` de este repositorio.
+**[→ Lee SETUP.md para instrucciones completas paso a paso](./SETUP.md)**
 
-3.  **Configuración:**
-    * En el archivo `Código.gs`, busca la variable `SPREADSHEET_ID` y pega el ID de tu hoja de cálculo.
-    * Configura tu correo en `ADMIN_EMAIL` (si aplica en futuras versiones).
+---
 
-4.  **Despliegue:**
-    * Haz clic en `Implementar` > `Nueva implementación` > `Aplicación web`.
-    * Configura "Quién tiene acceso" como "Cualquier persona" (o según tu necesidad).
+## ⚠️ Problemas Conocidos y Mejoras Futuras
+
+Este proyecto es funcional pero tiene algunas limitaciones de seguridad y UX que serán mejoradas:
+
+- **Autenticación débil:** Actualmente no hay login real. [Leer más...](./FALLAS_Y_MEJORAS.md)
+- **Sin permisos granulares:** Todos los usuarios tienen los mismos permisos.
+- **Validación limitada:** Algunos datos no se validan completamente antes de guardar.
+
+**[→ Lee FALLAS_Y_MEJORAS.md para lista completa y explicaciones detalladas](./FALLAS_Y_MEJORAS.md)**
 
 ---
 
@@ -89,21 +96,29 @@ Para implementar tu propia versión de Celeste POS:
 | **Dashboard Principal** | **Punto de Venta (POS)** |
 |:---:|:---:|
 | ![Dashboard](assets/dashboard.png) | ![POS](assets/pos-punto-de-venta.png) |
-| **Vista general de ventas e inventario bajo** | **Interfaz de facturación rápida** |
+| *Vista general de ventas e inventario bajo* | *Interfaz de facturación rápida* |
 
 | **Inventario** | **Gestión de Gastos** |
 |:---:|:---:|
 | ![Inventario](assets/inventario.png) | ![Gastos](assets/gastos.png) |
-| **Control de existencias y recetas** | **Registro de egresos y categorías** |
+| *Control de existencias y recetas* | *Registro de egresos y categorías* |
 
 | **Reportes** | **Activos Fijos** |
 |:---:|:---:|
 | ![Reportes](assets/reportes.png) | ![Activos](assets/activos-fijos.png) |
-| **Histórico de ventas y filtros** | **Control de equipos y mobiliario** |
+| *Histórico de ventas y filtros* | *Control de equipos y mobiliario* |
 
 ---
 
 ## 📄 Licencia
 
 Este proyecto es de uso libre para fines educativos.
-Desarrollado por [John Fredy Muñoz](https://www.linkedin.com/in/jfmu%C3%B1oz/).
+Desarrollado por [John Fredy Muñoz](https://www.linkedin.com/in/jfmuñoz/).
+
+---
+
+## 📞 Soporte
+
+- **¿Cómo instalo?** → Lee [SETUP.md](./SETUP.md)
+- **¿Qué fallas tiene?** → Lee [FALLAS_Y_MEJORAS.md](./FALLAS_Y_MEJORAS.md)
+- **¿Algún error?** → [Abre un Issue en GitHub](https://github.com/hqsoso64-oss/celestete-ICe-crem/issues)
