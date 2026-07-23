@@ -1,4 +1,4 @@
-var SPREADSHEET_ID = "TU_ID_DE_HOJA_DE_CALCULO_AQUI"; // ID CORRECTA
+var SPREADSHEET_ID = ""; // ← REEMPLAZA AQUÍ CON TU ID DE GOOGLE SHEETS (Ver SETUP.md)
 var CACHE_TIME = 1500;
 
 function doGet() { return HtmlService.createHtmlOutputFromFile('Index').setTitle('Celeste POS').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL); }
